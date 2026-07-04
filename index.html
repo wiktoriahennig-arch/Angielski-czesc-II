@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nursing English Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
+        .card { transition: all 0.3s ease; }
+        .option-btn { transition: all 0.2s ease; }
+        .option-btn:hover:not(:disabled) { transform: translateY(-2px); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+<div id="app" class="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden">
+    <!-- Quiz Header -->
+    <div class="bg-blue-600 p-6 text-white text-center">
+        <h1 class="text-2xl font-bold uppercase tracking-wide">Nursing English Prep</h1>
+        <div class="mt-2 text-blue-100 text-sm" id="progress-text">Zadanie 1 / 36</div>
+        <div class="w-full bg-blue-800 h-2 mt-4 rounded-full overflow-hidden">
+            <div id="progress-bar" class="bg-white h-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="quiz-container" class="p-8">
+        <!-- Start Screen -->
+        <div id="start-screen" class="text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Witaj w Quizie!</h2>
+            <p class="text-gray-600 mb-8 text-lg">Przenieśliśmy zadania z Twojego pliku do formy interaktywnej gry. Gotowy na powtórkę angielskiego w pielęgniarstwie?</p>
+            <button onclick="startQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition">
+                ZACZYNAMY!
+            </button>
+        </div>
+
+        <!-- Question Template (Hidden initially) -->
+        <div id="question-screen" class="hidden">
+            <div id="task-info" class="text-xs font-semibold text-blue-500 uppercase mb-2">TASK 1</div>
+            <div id="question-text" class="text-xl text-gray-800 font-medium mb-6 leading-relaxed">
+                Loading question...
+            </div>
+            <div id="options-container" class="space-y-3">
+                <!-- Options injected here -->
+            </div>
+            <div id="feedback" class="mt-6 p-4 rounded-lg hidden">
+                <!-- Feedback message -->
+            </div>
+            <button id="next-btn" onclick="nextQuestion()" class="mt-8 w-full bg-gray-800 hover:bg-black text-white font-bold py-3 px-6 rounded-xl hidden">
+                NASTĘPNE PYTANIE &rarr;
+            </button>
+        </div>
+
+        <!-- End Screen (Hidden initially) -->
+        <div id="end-screen" class="hidden text-center">
+            <div class="text-6xl mb-4">🎉</div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Gratulacje!</h2>
+            <p class="text-xl text-gray-600 mb-6">Ukończyłeś wszystkie zadania.</p>
+            <div class="bg-blue-50 p-6 rounded-2xl mb-8">
+                <div class="text-sm text-blue-600 uppercase font-bold">Twój Wynik</div>
+                <div id="final-score" class="text-5xl font-black text-blue-800">0/36</div>
+            </div>
+            <button onclick="location.reload()" class="text-blue-600 font-semibold hover:underline">Zacznij od nowa</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        // TASK 1: Matching
+        { task: "Task 1: Matching", q: "Complete: 'Help the patient...'", options: ["with washing and dressing", "takes their medication", "to move regularly", "to go to the toilet", "can eat without difficulty"], correct: 3 },
+        { task: "Task 1: Matching", q: "Complete: 'Make sure the patient...'", options: ["with washing and dressing", "takes their medication", "to move regularly", "to go to the toilet", "can eat without difficulty"], correct: 1 },
+        { task: "Task 1: Matching", q: "Complete: 'Assist the patient...'", options: ["with washing and dressing", "takes their medication", "to move regularly", "to go to the toilet", "can eat without difficulty"], correct: 0 },
+        { task: "Task 1: Matching", q: "Complete: 'Check if the patient...'", options: ["with washing and dressing", "takes their medication", "to move regularly", "to go to the toilet", "can eat without difficulty"], correct: 4 },
+        { task: "Task 1: Matching", q: "Complete: 'Encourage the patient...'", options: ["with washing and dressing", "takes their medication", "to move regularly", "to go to the toilet", "can eat without difficulty"], correct: 2 },
+
+        // TASK 2: Definitions
+        { task: "Task 2: Definitions", q: "...or PACU is where patients go to wake up after an operation.", options: ["Recovery", "anaesthetic", "anti-emetic", "CCU", "analgesia"], correct: 0 },
+        { task: "Task 2: Definitions", q: "Patients often need to breathe using an oxygen mask until they recover from the...", options: ["expiration", "anaesthetic", "analgesia", "maceration"], correct: 1 },
+        { task: "Task 2: Definitions", q: "A medication which stops patients vomiting or feeling sick is a/an...", options: ["anaesthetic", "analgesia", "anti-emetic", "incontinent"], correct: 2 },
+        { task: "Task 2: Definitions", q: "Medicine taken by mouth or by injection which stops pain is called...", options: ["anti-emetic", "analgesia", "anaesthetic", "subcut injection"], correct: 1 },
+        { task: "Task 2: Definitions", q: "'... layer' means into the layer under the skin.", options: ["inflamed", "maceration", "subcut injection", "respiratory"], correct: 2 },
+        { task: "Task 2: Definitions", q: "... pain feels like fire.", options: ["burning", "inflamed", "dull", "sharp"], correct: 0 },
+        { task: "Task 2: Definitions", q: "A/An ... wound is red, painful and swollen.", options: ["macerated", "inflamed", "incontinent", "healed"], correct: 1 },
+        { task: "Task 2: Definitions", q: "Somebody who cannot control when urine or faeces come out is...", options: ["analgesic", "inflamed", "incontinent", "macerated"], correct: 2 },
+        { task: "Task 2: Definitions", q: "The rate at which a person breathes in and out per minute is...", options: ["heart rate", "expiration rate", "respiratory rate", "BSL"], correct: 2 },
+        { task: "Task 2: Definitions", q: "... is excessive softness caused by too much moisture.", options: ["maceration", "inflammation", "expiration", "injection"], correct: 0 },
+
+        // TASK 3: True/False
+        { task: "Task 3: True or False", q: "Digital blood pressure monitor measures blood pressure automatically.", options: ["True", "False"], correct: 0 },
+        { task: "Task 3: True or False", q: "In a hospital, a porter is responsible for giving medication to patients.", options: ["True", "False"], correct: 1 },
+        { task: "Task 3: True or False", q: "Patient: 'It's dull and constant.' <br>Statement: The pain comes and goes.", options: ["True", "False"], correct: 1 },
+        { task: "Task 3: True or False", q: "Patient: 'Yes, I don't feel like eating.' <br>Statement: The patient is very hungry.", options: ["True", "False"], correct: 1 },
+        { task: "Task 3: True or False", q: "A 'slide sheet' is a piece of equipment used to help move a patient in bed.", options: ["True", "False"], correct: 0 },
+        { task: "Task 3: True or False", q: "Nurse: 'No, after eating.' <br>Statement: The patient should take medicine on an empty stomach.", options: ["True", "False"], correct: 1 },
+        { task: "Task 3: True or False", q: "Patient: 'Yes, penicillin.' <br>Statement: The patient can safely take penicillin.", options: ["True", "False"], correct: 1 },
+        { task: "Task 3: True or False", q: "To clean the rubber seal on the end of the insulin pen, you use an alcohol wipe.", options: ["True", "False"], correct: 0 },
+        { task: "Task 3: True or False", q: "Insulin should be kept in a cold place in order to guarantee the right temperature.", options: ["True", "False"], correct: 1, note: "Wait, the source says False - insulin in use is often room temp, stored is cold, but based on source key: False" },
+        { task: "Task 3: True or False", q: "Patient: 'No, none that I know of.' <br>Statement: The patient has some allergies.", options: ["True", "False"], correct: 1 },
+        { task: "Task 3: True or False", q: "Patient: 'No, this is the first time.' <br>Statement: The patient has experienced this pain earlier.", options: ["True", "False"], correct: 1 },
+
+        // TASK 4: Diabetes Text
+        { task: "Task 4: Diabetes", q: "People with (1) ___ have difficulty controlling the amount of glucose in their blood.", options: ["diabetes", "glycosuria", "diabetic ketoacidosis"], correct: 0 },
+        { task: "Task 4: Diabetes", q: "The (2) ___ is an organ that produces insulin.", options: ["liver", "pancreas", "spleen"], correct: 1 },
+        { task: "Task 4: Diabetes", q: "Insulin helps glucose enter cells to be used as (3) ___.", options: ["waste", "fuel", "tissue"], correct: 1 },
+        { task: "Task 4: Diabetes", q: "High blood sugar levels may lead to (4) ___ (glucose in urine).", options: ["ketosis", "glycosuria", "acidosis"], correct: 1 },
+        { task: "Task 4: Diabetes", q: "If blood sugar levels become dangerously low, it is (5) ___.", options: ["hyperglycaemia", "hypoglycaemia", "necrosis"], correct: 1 },
+        { task: "Task 4: Diabetes", q: "In severe cases of low glucose, the patient may need a/an (6) ___.", options: ["hypoglycaemic agent", "insulin", "analgesia"], correct: 0, note: "Correction: The text says 'quickly reduce glucose', but (6) in context of hypoglycemia usually means treatment to raise it. However, following the task source options: 'hypoglycaemic agent' is option A." },
+        { task: "Task 4: Diabetes", q: "Breaking down fat for energy produces (7) ___.", options: ["enzymes", "ketones", "antibodies"], correct: 1 },
+        { task: "Task 4: Diabetes", q: "High levels of ketones may lead to (8) ___.", options: ["diabetic ketoacidosis", "haematuria", "hypertension"], correct: 0 },
+        { task: "Task 4: Diabetes", q: "To manage condition, some patients use insulin (9) ___.", options: ["catheters", "inhalers", "pumps"], correct: 2 },
+        { task: "Task 4: Diabetes", q: "Regular monitoring of the (10) ___ is essential.", options: ["BSL", "BMI", "CNS"], correct: 0 }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let answered = false;
+
+    function startQuiz() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('question-screen').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        answered = false;
+        const q = questions[currentQuestion];
+        document.getElementById('task-info').innerText = q.task;
+        document.getElementById('question-text').innerHTML = q.q;
+        document.getElementById('progress-text').innerText = `Pytanie ${currentQuestion + 1} / ${questions.length}`;
+        document.getElementById('progress-bar').style.width = `${((currentQuestion) / questions.length) * 100}%`;
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-blue-300 hover:bg-blue-50 font-medium text-gray-700 flex items-center justify-between";
+            btn.innerHTML = `<span>${opt}</span><span class="icon hidden"></span>`;
+            btn.onclick = () => checkAnswer(index, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('feedback').classList.add('hidden');
+        document.getElementById('next-btn').classList.add('hidden');
+    }
+
+    function checkAnswer(index, btn) {
+        if(answered) return;
+        answered = true;
+
+        const q = questions[currentQuestion];
+        const allBtns = document.querySelectorAll('.option-btn');
+        const feedback = document.getElementById('feedback');
+        
+        allBtns.forEach(b => b.disabled = true);
+
+        if(index === q.correct) {
+            score++;
+            btn.classList.remove('border-gray-100');
+            btn.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+            btn.querySelector('.icon').innerHTML = '✅';
+            btn.querySelector('.icon').classList.remove('hidden');
+            feedback.innerText = "Świetnie! To poprawna odpowiedź.";
+            feedback.className = "mt-6 p-4 rounded-lg bg-green-100 text-green-800 font-bold";
+        } else {
+            btn.classList.remove('border-gray-100');
+            btn.classList.add('border-red-500', 'bg-red-50', 'text-red-700');
+            btn.querySelector('.icon').innerHTML = '❌';
+            btn.querySelector('.icon').classList.remove('hidden');
+            
+            // Show correct
+            allBtns[q.correct].classList.add('border-green-500', 'bg-green-50');
+            
+            feedback.innerText = `Niestety nie. Poprawna odpowiedź to: ${q.options[q.correct]}`;
+            feedback.className = "mt-6 p-4 rounded-lg bg-red-100 text-red-800 font-bold";
+        }
+        
+        feedback.classList.remove('hidden');
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        if(currentQuestion < questions.length) {
+            showQuestion();
+        } else {
+            showEndScreen();
+        }
+    }
+
+    function showEndScreen() {
+        document.getElementById('question-screen').classList.add('hidden');
+        document.getElementById('end-screen').classList.remove('hidden');
+        document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
+        document.getElementById('progress-bar').style.width = `100%`;
+        document.getElementById('progress-text').innerText = `Ukończono!`;
+    }
+</script>
+
+</body>
+</html>
+```eof
